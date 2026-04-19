@@ -18,6 +18,17 @@ Total wall-clock: ~90 seconds plus two browser clicks (GitHub + Anthropic OAuth)
 - Not a fresh-install tool in the distro sense — assumes apt + sudo + a working internet connection.
 - Not secret-free — while `bootstrap.sh` itself has no secrets, it prompts the user to authenticate via OAuth. That auth state persists on the host per `gh` defaults (`~/.config/gh/hosts.yml`).
 
+## iSH companion (iPhone mobile client)
+
+For iPhone mobile access into the homelab via iSH Shell + mosh:
+
+```sh
+apk update && apk add curl ca-certificates && \
+  curl -fsSL https://raw.githubusercontent.com/gbasran/gbas-bootstrap/main/ish-setup.sh | sh
+```
+
+Run inside iSH. Installs `mosh tmux openssh-client ca-certificates`, generates a passphrased ed25519 key at `~/.ssh/id_dev-fortress`, writes a `Host dev-fortress` block to `~/.ssh/config`, and prints the pubkey for the operator to append to `dev-fortress` authorized_keys. Idempotent; re-runs are safe.
+
 ## Pairs with
 
 - Private dotfiles: `gbasran/gbasran-claude-dotfiles` (requires `repo` scope to clone).
