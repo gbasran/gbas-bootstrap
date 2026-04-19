@@ -25,4 +25,8 @@ Total wall-clock: ~90 seconds plus two browser clicks (GitHub + Anthropic OAuth)
 
 ## Repo scope discipline
 
-GitHub auth uses the default interactive scope set (`repo, workflow, gist, read:org`). Not narrowed to `repo` only because the operator needs `workflow` + `read:org` for routine work on their daily drivers, and every host in this ecosystem runs LUKS-encrypted + single-operator + key-authenticated. Blast-radius control is wholesale revoke on decommission via GitHub UI rather than per-token scope narrowing.
+GitHub auth requests `repo, read:org, gist, workflow`. The default interactive `gh auth login -w` today grants `repo, read:org, gist` only — `-s workflow` is added explicitly so the token can edit `.github/workflows/*.yml` files. Not narrowed to `repo` only because the operator needs `workflow` + `read:org` for routine work on their daily drivers, and every host in this ecosystem runs LUKS-encrypted + single-operator + key-authenticated. Blast-radius control is wholesale revoke on decommission via GitHub UI rather than per-token scope narrowing.
+
+### Hosts bootstrapped before this change
+
+Run `gh auth refresh -h github.com -s workflow` once on any host whose token predates the `-s workflow` addition. bootstrap.sh also auto-runs this on re-invocation, so re-curl-ing the one-liner picks up the scope too.

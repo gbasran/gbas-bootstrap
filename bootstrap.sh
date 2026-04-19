@@ -16,15 +16,19 @@ sudo apt-get update -qq
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   gh git curl jq ca-certificates build-essential
 
-printf '=== [2/4] GitHub auth (device flow — default scope set) ===\n'
+printf '=== [2/4] GitHub auth (device flow) ===\n'
 if ! gh auth status -h github.com >/dev/null 2>&1; then
-  # Intentionally no -s flag: uses gh's default interactive scope set
-  # (repo, workflow, gist, read:org). Every host in this ecosystem is
-  # LUKS-encrypted + single-operator + key-authenticated — broad scope is
-  # the operator's deliberate choice. Blast-radius control is wholesale
-  # revoke via GitHub UI on decommission.
-  gh auth login -h github.com -p https -w
+  # gh's default interactive scope set is currently `repo, read:org, gist`.
+  # -s workflow is ADDED on top so the token can edit .github/workflows/*.yml,
+  # matching WSL's token set (repo, read:org, gist, workflow). Every host in
+  # this ecosystem is LUKS-encrypted + single-operator + key-authenticated,
+  # so broad scope is the operator's deliberate choice. Blast-radius control
+  # is wholesale revoke via GitHub UI on decommission.
+  gh auth login -h github.com -p https -w -s workflow
 fi
+# If this host was bootstrapped before the -s workflow change, add it now.
+# Idempotent: does nothing if scope is already granted.
+gh auth refresh -h github.com -s workflow 2>/dev/null || true
 gh auth setup-git
 
 printf '=== [3/4] clone private dotfiles ===\n'
