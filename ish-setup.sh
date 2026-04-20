@@ -11,9 +11,10 @@
 #   [3/5] ssh-keygen a passphrased ed25519 key (interactive prompt),
 #         skipped if ~/.ssh/id_dev-fortress already exists
 #   [4/5] Append a `Host dev-fortress` block to ~/.ssh/config (if absent)
-#   [5/5] Add `alias devfort='mosh dev-fortress -- tmux attach -d -t main'`
-#         to ~/.profile for quick-attach (the -d kicks ghost clients after
-#         iSH gets killed by iOS backgrounding, so sessions stay clean)
+#   [5/5] Add `alias devfort='mosh dev-fortress -- tmux new-session -A -D -s main'`
+#         to ~/.profile. -A = attach-or-create (self-heals if `main`
+#         tmux session died). -D = detach other clients (kicks ghosts
+#         after iSH gets killed by iOS backgrounding).
 # Then prints the pubkey in a framed block so user can tap-copy it into
 # Vaultwarden for the operator to append to dev-fortress authorized_keys.
 #
@@ -75,7 +76,7 @@ chmod 600 "$CFG_PATH"
 
 say "[5/5] quick-attach alias (~/.profile)"
 PROFILE_PATH="$HOME/.profile"
-ALIAS_LINE="alias devfort='mosh dev-fortress -- tmux attach -d -t main'"
+ALIAS_LINE="alias devfort='mosh dev-fortress -- tmux new-session -A -D -s main'"
 if [ -f "$PROFILE_PATH" ] && grep -qF "alias devfort=" "$PROFILE_PATH"; then
   printf 'devfort alias already present in %s - leaving it alone\n' "$PROFILE_PATH"
 else
@@ -94,6 +95,6 @@ cat "$KEY_PATH.pub"
 printf '\n===============================================================\n'
 printf 'After the pubkey is authorized, test with:\n'
 printf '  ssh dev-fortress hostname\n'
-printf '  mosh dev-fortress -- tmux attach -d -t main    # or just: devfort\n'
+printf '  mosh dev-fortress -- tmux new-session -A -D -s main    # or just: devfort\n'
 printf '(run `. ~/.profile` first if devfort is not yet found in this shell)\n'
 printf '===============================================================\n\n'
