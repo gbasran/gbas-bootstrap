@@ -6,11 +6,14 @@
 # dev-fortress endpoint from the fsoc homelab.
 #
 # What this script does (idempotent; safe to re-run):
-#   [1/4] apk update + add mosh tmux openssh-client ca-certificates
-#   [2/4] mkdir -p ~/.ssh with 700 perms
-#   [3/4] ssh-keygen a passphrased ed25519 key (interactive prompt),
+#   [1/5] apk update + add mosh tmux openssh-client ca-certificates
+#   [2/5] mkdir -p ~/.ssh with 700 perms
+#   [3/5] ssh-keygen a passphrased ed25519 key (interactive prompt),
 #         skipped if ~/.ssh/id_dev-fortress already exists
-#   [4/4] Append a `Host dev-fortress` block to ~/.ssh/config (if absent)
+#   [4/5] Append a `Host dev-fortress` block to ~/.ssh/config (if absent)
+#   [5/5] Add `alias devfort='mosh dev-fortress -- tmux attach -d -t main'`
+#         to ~/.profile for quick-attach (the -d kicks ghost clients after
+#         iSH gets killed by iOS backgrounding, so sessions stay clean)
 # Then prints the pubkey in a framed block so user can tap-copy it into
 # Vaultwarden for the operator to append to dev-fortress authorized_keys.
 #
@@ -53,7 +56,7 @@ else
   chmod 600 "$KEY_PATH"
 fi
 
-say "[4/4] ~/.ssh/config"
+say "[4/5] ~/.ssh/config"
 if [ -f "$CFG_PATH" ] && grep -qF "$HOST_BLOCK_MARKER" "$CFG_PATH"; then
   printf 'dev-fortress block already present in %s - leaving it alone\n' "$CFG_PATH"
 else
@@ -70,6 +73,17 @@ EOF
 fi
 chmod 600 "$CFG_PATH"
 
+say "[5/5] quick-attach alias (~/.profile)"
+PROFILE_PATH="$HOME/.profile"
+ALIAS_LINE="alias devfort='mosh dev-fortress -- tmux attach -d -t main'"
+if [ -f "$PROFILE_PATH" ] && grep -qF "alias devfort=" "$PROFILE_PATH"; then
+  printf 'devfort alias already present in %s - leaving it alone\n' "$PROFILE_PATH"
+else
+  printf '%s\n' "$ALIAS_LINE" >> "$PROFILE_PATH"
+  printf 'added alias: %s\n' "$ALIAS_LINE"
+  printf '(type `. ~/.profile` or restart iSH to pick it up)\n'
+fi
+
 printf '\n\n'
 printf '===============================================================\n'
 printf 'DONE. Copy this pubkey into Vaultwarden as\n'
@@ -80,5 +94,6 @@ cat "$KEY_PATH.pub"
 printf '\n===============================================================\n'
 printf 'After the pubkey is authorized, test with:\n'
 printf '  ssh dev-fortress hostname\n'
-printf '  mosh dev-fortress -- tmux attach -t main\n'
+printf '  mosh dev-fortress -- tmux attach -d -t main    # or just: devfort\n'
+printf '(run `. ~/.profile` first if devfort is not yet found in this shell)\n'
 printf '===============================================================\n\n'
